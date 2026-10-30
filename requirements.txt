@@ -4,3 +4,4 @@ openpyxl>=3.1
 xlsxwriter>=3.1
 python-calamine>=0.2
 vietnamadminunits>=1.0
+watchdog>=3.0
