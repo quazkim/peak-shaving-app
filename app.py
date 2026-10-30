@@ -16,7 +16,10 @@ import engine as e
 import ui
 import weather
 
-st.set_page_config(page_title="Tối ưu năng lượng", page_icon="⚡", layout="wide")
+LOGO_PATH = "assets/logo.png"
+
+st.set_page_config(page_title="Peak Shaving", page_icon=LOGO_PATH, layout="wide")
+st.logo(LOGO_PATH, size="large")
 
 st.markdown("""
 <style>
@@ -24,21 +27,18 @@ st.markdown("""
 header[data-testid="stHeader"],footer,#MainMenu{display:none!important}
 .block-container{padding:1.2rem 1.6rem 2rem!important;max-width:100%!important}
 section[data-testid="stSidebar"]{background:#FAF8F8;border-right:1px solid var(--line)}
-.apphead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.apphead .ico{width:36px;height:36px;border-radius:9px;background:#FEF3E2;color:#D97706;display:grid;place-items:center;font-size:20px}
-.apphead h1{font-size:22px;font-weight:700;margin:0;padding:0;line-height:1.2;color:#1F1F23}
-.apphead .sub{color:var(--sub);font-size:13px}
-.apphead .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;font-size:12.5px;font-weight:600;background:#E8F7EE;color:#16A34A}
-.apphead .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 div[data-testid="stExpander"]{border:1px solid var(--line);border-radius:12px;background:#fff}
 div[data-testid="stExpander"] summary{font-weight:600}
 .stButton>button[kind="primary"],.stDownloadButton>button{border-radius:9px;font-weight:500}
 .stButton>button[kind="primary"]{background:var(--red);border-color:var(--red)}
 .stButton>button[kind="primary"]:hover{background:var(--red2);border-color:var(--red2)}
 </style>
-<div class="apphead"><span class="ico">⚡</span><div><h1>Tối ưu năng lượng <span class="badge">Active</span></h1>
-<div class="sub">P. Cơ điện · Peak Shaving: chọn tủ nguồn DC cần chuyển sang acquy giờ cao điểm</div></div></div>
 """, unsafe_allow_html=True)
+
+with st.sidebar:
+    st.markdown('<div style="font-size:19px;font-weight:700;color:#1F1F23;margin:-6px 0 2px">Peak Shaving</div>',
+               unsafe_allow_html=True)
+    st.caption("P. Cơ điện · chọn tủ nguồn DC cần chuyển sang acquy giờ cao điểm")
 
 
 # ------------------------------------------------------------------ đọc file (có cache)
