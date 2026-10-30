@@ -126,7 +126,7 @@ def page_settings():
             help="Mặc định: trạm có ít nhất một thiết bị đủ năng lực thì giữ, và chỉ tác động các thiết bị "
                  "đủ năng lực của trạm đó. Chọn cách còn lại nếu cần loại trạm có thiết bị không đủ năng lực.")
     st.subheader("Thời tiết")
-    st.checkbox("Áp dụng thời tiết (Open-Meteo, cần mạng)", False, key="k_use_wx",
+    st.checkbox("Áp dụng thời tiết (Open-Meteo, cần mạng)", True, key="k_use_wx",
                help="Loại trạm có nguy cơ mất điện theo dự báo hôm nay. Tọa độ lấy theo phường/xã trong CSDL "
                     "nhà trạm (cột 'Tên phường/xã'). Lỗi mạng thì app bỏ qua bước này và báo rõ.")
     st.number_input("Loại trạm nếu mưa lớn hơn (mm/giờ)", 0.0, 200.0, 8.0, 1.0, key="k_rain_mm")
@@ -143,7 +143,7 @@ def page_settings():
 # ------------------------------------------------------------------ trang Dashboard: nạp file + kết quả
 def page_dashboard():
     params = get_params()
-    use_wx = st.session_state.get("k_use_wx", False)
+    use_wx = st.session_state.get("k_use_wx", True)
 
     colmap, dev = None, None
     with st.expander("Nguồn dữ liệu và chạy lọc", expanded="res" not in st.session_state):
