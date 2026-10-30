@@ -139,7 +139,7 @@ with tab_dash:
         with c3:
             f_dev = st.file_uploader("3. Danh sách thiết bị (.xlsx, có thể chọn nhiều file khu vực)", type=["xlsx"],
                                      accept_multiple_files=True)
-            use_sample = st.checkbox("Dùng dữ liệu thiết bị MẪU để thử (không phải dữ liệu thật)")
+            use_sample = False
 
         if f_dev:
             dev = load_devices(tuple(f.getvalue() for f in f_dev))
@@ -179,9 +179,6 @@ with tab_dash:
 
         ready = bool(f_inv) and f_csdl is not None
         go = st.button("Chạy lọc", type="primary", disabled=not ready)
-        if not ready:
-            st.info("Nạp hóa đơn SAP và CSDL nhà trạm để chạy. File thiết bị cần thiết để ra danh sách thiết bị; "
-                    "nếu chưa có, kết quả dừng ở danh sách trạm.")
 
     if go:
         try:
