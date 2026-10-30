@@ -34,11 +34,6 @@ div[data-testid="stExpander"] summary{font-weight:600}
 </style>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    lc1, lc2 = st.columns([1, 4], vertical_alignment="center")
-    lc1.image(LOGO_PATH)
-    lc2.markdown('<div style="font-size:19px;font-weight:700;color:#1F1F23">Peak Shaving</div>',
-                unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------------ đọc file (có cache)
@@ -297,8 +292,16 @@ def page_dashboard():
 
 
 # ------------------------------------------------------------------ điều hướng: 2 icon ở thanh bên trái
-pg = st.navigation([
-    st.Page(page_dashboard, title="Dashboard", icon=":material/dashboard:", default=True),
-    st.Page(page_settings, title="Cài đặt", icon=":material/settings:"),
-])
+page_dash_p = st.Page(page_dashboard, title="Dashboard", icon=":material/dashboard:", default=True)
+page_settings_p = st.Page(page_settings, title="Cài đặt", icon=":material/settings:")
+pg = st.navigation([page_dash_p, page_settings_p], position="hidden")
+
+with st.sidebar:
+    lc1, lc2 = st.columns([1, 4], vertical_alignment="center")
+    lc1.image(LOGO_PATH)
+    lc2.markdown('<div style="font-size:19px;font-weight:700;color:#1F1F23">Peak Shaving</div>',
+                unsafe_allow_html=True)
+    st.page_link(page_dash_p)
+    st.page_link(page_settings_p)
+
 pg.run()
