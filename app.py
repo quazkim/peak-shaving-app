@@ -19,7 +19,6 @@ import weather
 LOGO_PATH = "assets/logo.png"
 
 st.set_page_config(page_title="Peak Shaving", page_icon=LOGO_PATH, layout="wide")
-st.logo(LOGO_PATH, size="large")
 
 st.markdown("""
 <style>
@@ -36,9 +35,10 @@ div[data-testid="stExpander"] summary{font-weight:600}
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.markdown('<div style="font-size:19px;font-weight:700;color:#1F1F23;margin:-6px 0 2px">Peak Shaving</div>',
-               unsafe_allow_html=True)
-    st.caption("P. Cơ điện · chọn tủ nguồn DC cần chuyển sang acquy giờ cao điểm")
+    lc1, lc2 = st.columns([1, 4], vertical_alignment="center")
+    lc1.image(LOGO_PATH)
+    lc2.markdown('<div style="font-size:19px;font-weight:700;color:#1F1F23">Peak Shaving</div>',
+                unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------------ đọc file (có cache)
