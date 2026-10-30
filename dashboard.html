@@ -182,6 +182,30 @@ function kpis(){
   var tot = 0, mx = 0; dev.forEach(function(r){if(r.av!=null){tot+=r.av; if(r.av>mx)mx=r.av}});
   var unitLbl = dev.length?dev.length:0;
   var avg = dev.length? tot/dev.length : null;
+  // Ước tính tiền điện tiết kiệm: kWh trung bình/giờ của TRẠM (= sản lượng thật trong hóa đơn / số giờ của kỳ
+  // hóa đơn) nhân với số giờ xả ắc quy tối đa của trạm đêm nay, nhân chênh lệch đơn giá cao điểm - thấp điểm.
+  // Gộp theo trạm (không theo thiết bị) để không đếm trùng sản lượng khi một trạm có nhiều thiết bị.
+  var priceCD = D.prices && D.prices.CD, priceTD = D.prices && D.prices.TD;
+  var priceDiff = (priceCD!=null && priceTD!=null) ? (priceCD-priceTD) : null;
+  var savingsReason = null;
+  if(!D.period_days) savingsReason = 'Chưa rõ số ngày của kỳ hóa đơn (file hóa đơn thiếu cột "Từ ngày")';
+  else if(priceDiff==null) savingsReason = 'Thiếu đơn giá cao điểm hoặc thấp điểm bình quân từ hóa đơn';
+  else if(!dev.length) savingsReason = 'Chưa có ' + (D.level==='station'?'trạm':'thiết bị') + ' nào đề xuất';
+  var totalSavings = null;
+  if(!savingsReason){
+    var stBest = {};
+    dev.forEach(function(r){ if(r.kwh==null||r.av==null) return; if(!stBest[r.bts]||r.av>stBest[r.bts]) stBest[r.bts]=r.av; });
+    var ids = Object.keys(stBest);
+    if(!ids.length) savingsReason = 'Chưa đủ dữ liệu sản lượng (kWh) hoặc thời gian xả của trạm đề xuất';
+    else {
+      totalSavings = 0;
+      var byBts = {}; dev.forEach(function(r){ if(!(r.bts in byBts)) byBts[r.bts]=r; });
+      ids.forEach(function(bts){
+        var r = byBts[bts], avgKw = r.kwh/(D.period_days*24);
+        totalSavings += avgKw * stBest[bts] * priceDiff;
+      });
+    }
+  }
   var wait = b.filter(function(r){return status(r)==='appr' && r.st});
   var wmin = wait.length? Math.min.apply(null, wait.map(function(r){return hm(r.st)})):null;
   var wmax = wait.length? Math.max.apply(null, wait.map(function(r){return hm(r.st)})):null;
@@ -195,10 +219,14 @@ function kpis(){
      '<div class="kv">'+vn(avg,1)+'<small>giờ / '+unitName+'</small></div>'+
      '<div class="kd">Tổng <b>'+vn(tot,0)+'</b> giờ · dài nhất <b>'+vn(mx,1)+'</b> giờ</div>'+
      '<div class="src">= thời gian xả ắc quy − dự phòng <b>'+vn(D.reserve,1)+' giờ</b>, tối đa theo cửa sổ <b>'+esc(D.win_start)+'–'+esc(D.win_end)+'</b></div></div>';
-  h+='<div class="card kpi" style="--c:#16A34A;--cb:#E8F7EE"><div class="kh"><span class="ki">'+ic('coin')+'</span>Tiền điện tiết kiệm hôm nay</div>'+
-     '<div class="kv" style="color:#9A9AA2">—</div>'+
-     '<div class="kd">Chưa tính trong bản demo</div>'+
-     '<div class="src">Cần tải thực tế (kW) của từng trạm, chưa có trong dữ liệu đầu vào</div></div>';
+  h+='<div class="card kpi" style="--c:#16A34A;--cb:#E8F7EE"><div class="kh"><span class="ki">'+ic('coin')+'</span>Tiền điện tiết kiệm (ước tính) hôm nay</div>'+
+     (savingsReason!=null?
+       '<div class="kv" style="color:#9A9AA2">—</div><div class="kd">Chưa tính được</div><div class="src">'+esc(savingsReason)+'</div>'
+     :
+       '<div class="kv">'+vn(totalSavings,0)+'<small>đ</small></div>'+
+       '<div class="kd">Chênh lệch đơn giá <b>'+vn(priceDiff)+'</b> đ/kWh · kỳ hóa đơn <b>'+vn(D.period_days)+'</b> ngày</div>'+
+       '<div class="src">Ước tính = (kWh hóa đơn ÷ giờ của kỳ) × giờ xả tối đa đêm nay, giả định tải trung bình không đổi theo giờ. Không phải số đo thực tế.</div>'
+     )+'</div>';
   h+='<div class="card kpi" style="--c:#2563EB;--cb:#EAF1FE"><div class="kh"><span class="ki">'+ic('bat')+'</span>'+(D.level==='station'?'Trạm':'Thiết bị')+' đang chạy acquy / chờ chạy</div>'+
      '<div class="kv">'+vn(cnt.run)+'<small>/ '+vn(cnt.appr)+'</small></div>'+
      '<div class="kd">'+(wait.length? '<b>'+vn(wait.length)+'</b> '+unitName+' sẽ chuyển lúc '+fmt(wmin)+(wmax>wmin?' – '+fmt(wmax):''):'Chưa có '+unitName+' nào được duyệt chờ chạy')+'</div>'+

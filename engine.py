@@ -368,6 +368,7 @@ def run_pipeline(inv: pd.DataFrame, csdl: pd.DataFrame, dev: pd.DataFrame | None
                  colmap: dict | None, p: Params, weather_fn=None) -> dict:
     """weather_fn(trạm đã qua lọc hạ tầng) -> bảng bts, rain_max, temp_max, wx_code, wx_text; None = bỏ qua thời tiết."""
     period = None
+    period_days = None   # số ngày thực của kỳ hóa đơn ĐÃ lọc theo invoice_from, dùng để quy đổi kWh -> kW trung bình
     if "tu_ngay" in inv.columns and inv["tu_ngay"].notna().any():
         period = (inv["tu_ngay"].min().strftime("%m/%Y"), inv["tu_ngay"].max().strftime("%m/%Y"))
         if p.invoice_from:
@@ -375,6 +376,9 @@ def run_pipeline(inv: pd.DataFrame, csdl: pd.DataFrame, dev: pd.DataFrame | None
             if inv.empty:
                 raise ValueError(f"Không có dòng hóa đơn nào từ {p.invoice_from}. Kỳ hóa đơn trong file: "
                                  f"{period[0]} - {period[1]}")
+        start = inv["tu_ngay"].min().to_period("M").start_time
+        end = inv["tu_ngay"].max().to_period("M").end_time
+        period_days = (end.normalize() - start).days + 1
     if p.tou_method == "bands":
         k_share = float((tag_tier(inv["Đơn giá"], p.price_bands) == "K").mean())
         tou, rej11 = step_tou(inv, p.price_bands)
@@ -402,7 +406,7 @@ def run_pipeline(inv: pd.DataFrame, csdl: pd.DataFrame, dev: pd.DataFrame | None
     rej = pd.concat(rejected, ignore_index=True)
     rej["ly_do"] = rej["ma_ly_do"].map(REASONS)
     return {"tou": tou, "stations": infra, "devices": devices, "rejected": rej, "funnel": funnel,
-            "period": period, "k_share": k_share, "weather_excluded": wx_excluded}
+            "period": period, "period_days": period_days, "k_share": k_share, "weather_excluded": wx_excluded}
 
 
 # ---------------------------------------------------------------- dữ liệu thiết bị mẫu (để thử)

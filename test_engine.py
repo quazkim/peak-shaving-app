@@ -97,6 +97,8 @@ def test_invoice_from_and_2024_bands():
     r = e.run_pipeline(d, csdl, None, None, e.Params(invoice_from="2024-11"))
     assert r["period"] == ("03/2024", "11/2024") and r["k_share"] == 0 and len(r["stations"]) == 1
     assert r["stations"].tong_kwh.iloc[0] == 80          # chỉ tính 3 dòng từ tháng 11
+    assert r["period_days"] == 30                        # period_days tính theo tháng ĐÃ lọc (tháng 11, 30 ngày),
+                                                          # không phải toàn bộ kỳ trong file (03/2024-11/2024)
 
 
 def test_ui_payload_and_render():
@@ -115,6 +117,26 @@ def test_ui_payload_and_render():
     assert [r["bts"] for r in ex] == ["B"] and ex[0]["why"]            # trạm B bị loại hiện mờ kèm lý do
     html = ui.render_dashboard(pl)
     assert '"id": "D1"' in html and "/*__DATA__*/" not in html
+
+
+def test_period_days_and_station_kwh_for_savings_estimate():
+    """Dữ liệu cho thẻ KPI 'Tiền điện tiết kiệm (ước tính)' ở dashboard.html: số ngày thực của kỳ hóa đơn
+    (period_days) và sản lượng thật tong_kwh của từng trạm (gửi qua payload dưới tên 'kwh') phải đúng, để
+    JS quy đổi kWh/kỳ -> kW trung bình mà không bịa số."""
+    import ui
+    d = pd.DataFrame({"bts": ["A"] * 9,
+                      "Đơn giá": [1404.0, 2146.0, 3931.0] * 3,
+                      "consumeCount": [100, 300, 80] * 3,
+                      "tu_ngay": pd.to_datetime(["2025-01-01"] * 3 + ["2025-02-01"] * 3 + ["2025-03-01"] * 3)})
+    csdl = pd.DataFrame({"bts": ["A"], "Phân lớp trạm": "Lớp truy nhập", "Trạm ưu tiên": "UT3",
+                         "Thời gian xả Accu (h)": 4.0})
+    r = e.run_pipeline(d, csdl, None, None, e.Params())
+    assert r["period_days"] == 31 + 28 + 31              # tháng 1-3/2025 (2025 không nhuận): 90 ngày
+    assert r["stations"].tong_kwh.iloc[0] == (100 + 300 + 80) * 3
+
+    pl = ui.build_payload(r, e.Params(), None)
+    assert pl["period_days"] == 90
+    assert pl["rows"][0]["kwh"] == (100 + 300 + 80) * 3
 
 
 def _fake_hourly(rain_at_19=0.0, temp_at_19=28.0, code_at_19=3):

@@ -54,7 +54,8 @@ def _row(meta: pd.DataFrame, bts: str, **kw) -> dict:
             "kv": g("Tên khu vực"), "ut": g("Trạm ưu tiên"), "h": None, "hs": "", "av": None,
             "st": None, "en": None, "ex": 0, "why": "",
             "wx": g("wx_text"), "temp": _f(m.get("temp_max")) if m is not None else None,
-            "rain": _f(m.get("rain_max")) if m is not None else None}
+            "rain": _f(m.get("rain_max")) if m is not None else None,
+            "kwh": _f(m.get("tong_kwh"), 1) if m is not None else None}
     base.update(kw)
     return base
 
@@ -73,7 +74,7 @@ def build_payload(res: dict, params: e.Params, prices: dict | None, sample: bool
     now = datetime.now(timezone(timedelta(hours=7)))
     stations = res["stations"]
     meta_cols = ["bts", "Tên khu vực", "Tên tỉnh/thành phố", "Trạm ưu tiên", "Thời gian xả Accu (h)",
-                 "wx_text", "temp_max", "rain_max"]
+                 "wx_text", "temp_max", "rain_max", "tong_kwh"]
     wx_ex = res.get("weather_excluded")
     allst = pd.concat([stations] + ([wx_ex] if wx_ex is not None and len(wx_ex) else []), ignore_index=True)
     meta = allst[[c for c in meta_cols if c in allst.columns]].drop_duplicates("bts").set_index("bts")
@@ -126,6 +127,7 @@ def build_payload(res: dict, params: e.Params, prices: dict | None, sample: bool
         "sample": bool(sample), "level": level, "rows": rows,
         "weather": has_wx, "rain_mm": params.rain_mm, "temp_c": params.temp_c,
         "wx_scope": "cả ngày" if params.weather_scope == "day" else "trong khung xả",
+        "period_days": res.get("period_days"),
     }
 
 
@@ -142,4 +144,4 @@ def empty_payload(params: e.Params) -> dict:
             "invoice_from": "", "invoice_total": 0, "tou_total": 0, "infra_total": 0,
             "prices": {"TD": None, "BT": None, "CD": None}, "win_start": params.window_start,
             "win_end": params.end_time, "reserve": params.reserve_h, "threshold": params.min_discharge_h,
-            "sample": False, "level": "device", "rows": [], "empty": True, "weather": False}
+            "sample": False, "level": "device", "rows": [], "empty": True, "weather": False, "period_days": None}
