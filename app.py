@@ -88,9 +88,6 @@ with st.sidebar:
     reserve = st.number_input("Dự phòng giữ lại sau khi xả (giờ)", 0.0, 12.0, 1.0, 0.5)
     end_time = st.text_input("Giờ kết thúc xả (HH:MM)", "22:30")
     win_start = st.text_input("Đầu cửa sổ xả cho phép (HH:MM)", "17:30")
-    st.caption("Bắt đầu xả = giờ kết thúc trừ thời gian khả dụng (thời gian xả trừ dự phòng), "
-               "không sớm hơn đầu cửa sổ. Cần đối chiếu khung giờ này với biểu giá hợp đồng: "
-               "phần xả sau giờ cao điểm có thể không hưởng giá cao điểm.")
     prios = st.multiselect("Trạm ưu tiên cho phép", ["UT1", "UT2", "UT3"], ["UT2", "UT3"])
     classes = st.multiselect("Phân lớp trạm cho phép",
                              ["Lớp truy nhập", "Tổng trạm huyện", "Tổng trạm tỉnh", "Trạm trục"],
