@@ -87,10 +87,25 @@ class _HTTPStatusError(Exception):
         self.code = code
 
 
+def _ssl_context():
+    """Một số bản Python (ví dụ cài từ python.org trên macOS) không có sẵn kho chứng chỉ CA của hệ điều hành,
+    làm urlopen báo lỗi CERTIFICATE_VERIFY_FAILED dù mạng và URL đều ổn. Dùng kho chứng chỉ của gói certifi
+    khi có, để không phụ thuộc vào việc máy đã cài đặt CA hệ thống đúng cách hay chưa."""
+    try:
+        import certifi
+        import ssl
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return None
+
+
+_SSL_CTX = _ssl_context()
+
+
 def _http_get(url: str, timeout: int = 25) -> list | dict:
     req = urllib.request.Request(url, headers={"User-Agent": "peak-shaving-demo"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 (URL cố định, https)
+        with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as r:  # noqa: S310 (URL cố định, https)
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as ex:
         raise _HTTPStatusError(ex.code, f"HTTP {ex.code}") from ex
