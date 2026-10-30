@@ -207,23 +207,25 @@ def page_dashboard():
                 pre = e.run_pipeline(inv, csdl, None, None, params)
                 dev = e.make_sample_devices(pre["stations"])
                 sample = True
-            wx_msg: list[str] = []
+            wx_msg: list[dict] = []
 
             def wx_fn(infra: pd.DataFrame):
                 if "Tên phường/xã" not in infra.columns or "Tên tỉnh/thành phố" not in infra.columns:
-                    wx_msg.append("CSDL nhà trạm không có cột 'Tên phường/xã' nên chưa áp dụng được thời tiết. "
-                                  "Dùng báo cáo cảnh báo trạm làm CSDL nhà trạm.")
+                    wx_msg.append({"text": "CSDL nhà trạm không có cột 'Tên phường/xã' nên chưa áp dụng được thời tiết.",
+                                   "detail": "Dùng báo cáo cảnh báo trạm làm CSDL nhà trạm."})
                     return None
                 pairs = tuple(sorted(set(zip(infra["Tên tỉnh/thành phố"].fillna(""), infra["Tên phường/xã"].fillna("")))))
                 h0, h1 = weather.hours_scope(params.window_start, params.end_time, params.weather_scope)
                 try:
                     ward = load_weather(pairs, h0, h1, pd.Timestamp.today().strftime("%Y-%m-%d"))
                 except Exception as ex:
-                    wx_msg.append(f"Không lấy được dự báo thời tiết ({ex}). Kết quả CHƯA áp dụng thời tiết.")
+                    wx_msg.append({"text": "Không lấy được dự báo thời tiết. Kết quả CHƯA áp dụng thời tiết.",
+                                   "detail": str(ex)})
                     return None
                 miss = int(ward["lat"].isna().sum())
                 if miss:
-                    wx_msg.append(f"{miss}/{len(ward)} phường/xã không có tọa độ nên các trạm đó không bị loại theo thời tiết.")
+                    wx_msg.append({"text": f"{miss}/{len(ward)} phường/xã không có tọa độ nên các trạm đó không bị loại theo thời tiết.",
+                                   "detail": None})
                 return weather.attach(infra, ward)
 
             res = e.run_pipeline(inv, csdl, dev, colmap if dev is not None else None, params,
@@ -242,29 +244,16 @@ def page_dashboard():
     # ------------------------------------------------------------------ giao diện mini app
     if "res" in st.session_state:
         res, used, sample, prices, _ = st.session_state["res"]
-        if res.get("k_share", 0) > 0.5:
-            st.error(f"{res['k_share']:.0%} dòng hóa đơn có đơn giá không khớp dải nào (cao/bình thường/thấp điểm). "
-                     "Kết quả 3 giá sẽ thiếu trạm: kiểm tra kỳ hóa đơn và bảng 'Dải đơn giá' ở trang Cài đặt.")
-        if res.get("period") and not used.invoice_from:
-            st.warning(f"Đang dùng toàn bộ hóa đơn kỳ {res['period'][0]} - {res['period'][1]}. "
-                       "Danh sách 3 giá nên lấy từ 2-3 tháng gần nhất: đặt 'Chỉ dùng hóa đơn từ tháng' ở trang Cài đặt.")
-        for m in st.session_state.get("wx_msg", []):
-            st.warning(m)
-        if res["devices"] is not None:
-            nd = res["rejected"][res["rejected"].ma_ly_do == "L15_NO_DEVICE"].bts.nunique()
-            total = nd + dict(res["funnel"]).get("Trạm có thiết bị đủ năng lực", 0)
-            if total and nd / total > 0.3:
-                reg = res["stations"][res["stations"].bts.isin(res["rejected"][res["rejected"].ma_ly_do == "L15_NO_DEVICE"].bts)]
-                top = reg["Tên khu vực"].value_counts().to_dict() if "Tên khu vực" in reg else {}
-                st.warning(f"File thiết bị không có {nd:,}/{total:,} trạm đã đạt điều kiện hóa đơn và hạ tầng"
-                           + (f" (theo khu vực: {top})" if top else "")
-                           + ". Kiểm tra file thiết bị có đủ các khu vực chưa.")
-        html = ui.render_dashboard(ui.build_payload(res, used, prices, sample))
+        html = ui.render_dashboard(ui.build_payload(res, used, prices, sample,
+                                                     wx_notices=st.session_state.get("wx_msg", [])))
     else:
         res, used, sample = None, params, False
         html = ui.render_dashboard(ui.empty_payload(params))
 
-    components.html(html, height=1250, scrolling=True)
+    # scrolling=True là lưới an toàn: dashboard.html tự báo chiều cao qua postMessage để khung nhúng lớn vừa
+    # khít nội dung (không còn 2 thanh cuộn chồng nhau); nếu trình duyệt nào đó không nhận postMessage,
+    # vẫn còn thanh cuộn của khung nhúng để không mất nội dung thay vì bị cắt.
+    components.html(html, height=260, scrolling=True)
 
     if res is not None:
         with st.expander("Chi tiết kỹ thuật: phễu lọc, trạm bị loại, tham số, tải Excel"):
