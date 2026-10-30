@@ -69,37 +69,7 @@ def _why(code: str, meta: pd.DataFrame, bts: str, params: e.Params) -> str:
     return e.REASONS.get(code, code)
 
 
-def _notices(res: dict, params: e.Params, wx_notices: list[dict] | None) -> list[dict]:
-    """Danh sách lưu ý gộp lại để hiện trong MỘT chip trên giao diện (không hiện chuỗi lỗi kỹ thuật thô
-    ngoài phần 'detail' gập lại). Mỗi mục: {level: 'warn'|'error', text: câu dễ hiểu, detail: chi tiết kỹ thuật hoặc None}."""
-    out: list[dict] = []
-    k_share = res.get("k_share") or 0
-    if k_share > 0.5:
-        out.append({"level": "error",
-                    "text": f"{k_share:.0%} dòng hóa đơn có đơn giá không khớp dải nào (cao/bình thường/thấp điểm). Kết quả 3 giá sẽ thiếu trạm.",
-                    "detail": "Kiểm tra kỳ hóa đơn và bảng 'Dải đơn giá' ở trang Cài đặt."})
-    if res.get("period") and not params.invoice_from:
-        out.append({"level": "warn",
-                    "text": f"Đang dùng toàn bộ hóa đơn kỳ {res['period'][0]} – {res['period'][1]}.",
-                    "detail": "Danh sách 3 giá nên lấy từ 2-3 tháng gần nhất: đặt 'Chỉ dùng hóa đơn từ tháng' ở trang Cài đặt."})
-    if res.get("devices") is not None:
-        rejected = res["rejected"]
-        nd = rejected[rejected.ma_ly_do == "L15_NO_DEVICE"].bts.nunique()
-        total = nd + dict(res["funnel"]).get("Trạm có thiết bị đủ năng lực", 0)
-        if total and nd / total > 0.3:
-            reg = res["stations"][res["stations"].bts.isin(rejected[rejected.ma_ly_do == "L15_NO_DEVICE"].bts)]
-            top = reg["Tên khu vực"].value_counts().to_dict() if "Tên khu vực" in reg else {}
-            out.append({"level": "warn",
-                        "text": f"File thiết bị không có {nd:,}/{total:,} trạm đã đạt điều kiện hóa đơn và hạ tầng.",
-                        "detail": ("Theo khu vực: " + ", ".join(f"{k} ({v})" for k, v in top.items())) if top
-                                  else "Kiểm tra file thiết bị có đủ các khu vực chưa."})
-    for m in (wx_notices or []):
-        out.append({"level": m.get("level", "warn"), "text": m["text"], "detail": m.get("detail")})
-    return out
-
-
-def build_payload(res: dict, params: e.Params, prices: dict | None, sample: bool = False,
-                  wx_notices: list[dict] | None = None) -> dict:
+def build_payload(res: dict, params: e.Params, prices: dict | None, sample: bool = False) -> dict:
     now = datetime.now(timezone(timedelta(hours=7)))
     stations = res["stations"]
     meta_cols = ["bts", "Tên khu vực", "Tên tỉnh/thành phố", "Trạm ưu tiên", "Thời gian xả Accu (h)",
@@ -156,7 +126,6 @@ def build_payload(res: dict, params: e.Params, prices: dict | None, sample: bool
         "sample": bool(sample), "level": level, "rows": rows,
         "weather": has_wx, "rain_mm": params.rain_mm, "temp_c": params.temp_c,
         "wx_scope": "cả ngày" if params.weather_scope == "day" else "trong khung xả",
-        "notices": _notices(res, params, wx_notices),
     }
 
 
@@ -173,4 +142,4 @@ def empty_payload(params: e.Params) -> dict:
             "invoice_from": "", "invoice_total": 0, "tou_total": 0, "infra_total": 0,
             "prices": {"TD": None, "BT": None, "CD": None}, "win_start": params.window_start,
             "win_end": params.end_time, "reserve": params.reserve_h, "threshold": params.min_discharge_h,
-            "sample": False, "level": "device", "rows": [], "empty": True, "weather": False, "notices": []}
+            "sample": False, "level": "device", "rows": [], "empty": True, "weather": False}

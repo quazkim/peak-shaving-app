@@ -117,32 +117,6 @@ def test_ui_payload_and_render():
     assert '"id": "D1"' in html and "/*__DATA__*/" not in html
 
 
-def test_ui_notices_merge_and_hide_raw_errors():
-    """Các cảnh báo (đơn giá lệch dải, kỳ hóa đơn, thiếu file thiết bị, lỗi mạng thời tiết) phải gộp vào
-    payload['notices'] thay vì hiện rời rạc; lỗi kỹ thuật thô (ví dụ exception thời tiết) chỉ nằm trong
-    'detail' (gập lại trên giao diện), không lẫn vào câu 'text' hiển thị mặc định."""
-    import ui
-    st = pd.DataFrame({"bts": ["A", "B"], "Trạm ưu tiên": "UT3", "Phân lớp trạm": "Lớp truy nhập",
-                       "Tên khu vực": "Khu vực 1", "Tên tỉnh/thành phố": "Hà Nội", "Thời gian xả Accu (h)": 4.0})
-    dev = pd.DataFrame({"id": ["D1"], "m": "M", "k": "320000841", "tram": "A"})
-    cm = {"device": "id", "model": "m", "code": "k", "station": "tram"}
-    p = e.Params()
-    dv, rej = e.step_devices(st, dev, cm, p)
-    rej["ly_do"] = rej["ma_ly_do"].map(e.REASONS)
-    res = {"stations": st, "devices": dv, "rejected": rej, "k_share": 0.6,
-          "period": ("01/2024", "12/2024"), "funnel": [("Trạm có trong hóa đơn", 2),
-          ("Trạm có thiết bị đủ năng lực", 1)]}
-    wx = [{"text": "Không lấy được dự báo thời tiết. Kết quả CHƯA áp dụng thời tiết.",
-          "detail": "urlopen error Tunnel connection failed: 403 Forbidden"}]
-    pl = ui.build_payload(res, p, None, wx_notices=wx)
-    levels = [n["level"] for n in pl["notices"]]
-    assert "error" in levels and levels.count("warn") >= 2          # k_share -> error; kỳ hóa đơn + thiếu thiết bị -> warn
-    texts = " ".join(n["text"] for n in pl["notices"])
-    assert "urlopen" not in texts and "403" not in texts            # lỗi kỹ thuật thô không lộ ra câu hiển thị chính
-    wx_notice = [n for n in pl["notices"] if n["text"].startswith("Không lấy được dự báo")][0]
-    assert "urlopen" in wx_notice["detail"]                         # chi tiết kỹ thuật vẫn giữ lại, chỉ tách riêng
-
-
 def _fake_hourly(rain_at_19=0.0, temp_at_19=28.0, code_at_19=3):
     times = [f"2026-10-30T{h:02d}:00" for h in range(24)]
     rain = [0.0] * 24; temp = [25.0] * 24; code = [1] * 24
