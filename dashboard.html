@@ -5,9 +5,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-:root{--red:#E3102F;--red2:#C8102E;--soft:#FDECEF;--text:#1F1F23;--sub:#6B6B73;--line:#ECE7E8;--bg:#FAF8F8;--ok:#16A34A;--okb:#E8F7EE;--warn:#D97706;--warnb:#FEF3E2;--info:#2563EB;--infob:#EAF1FE;--pur:#7C3AED;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
+:root{--red:#E3102F;--red2:#C8102E;--soft:#FDECEF;--text:#1F1F23;--sub:#6B6B73;--line:#ECE7E8;--bg:#FAF8F8;--ok:#16A34A;--okb:#E8F7EE;--warn:#D97706;--warnb:#FEF3E2;--info:#2563EB;--infob:#EAF1FE;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#fff;font:14px/1.45 'Inter','Segoe UI',system-ui,sans-serif;color:var(--text)}
+::selection{background:var(--soft);color:var(--red2)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .frame{margin:0;border:1px solid #E2DADB;border-radius:14px;background:#fff;box-shadow:0 2px 10px #00000008;overflow:hidden}
 .inner{padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px}
@@ -18,7 +20,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .btn.off{opacity:.45;pointer-events:none;box-shadow:none}
 .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;font-size:12.5px;font-weight:600;white-space:nowrap}
 .badge.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.b-ok{background:var(--okb);color:var(--ok)}.b-warn{background:var(--warnb);color:var(--warn)}.b-info{background:var(--infob);color:var(--info)}.b-red{background:var(--soft);color:var(--red2)}.b-gray{background:#F1F1F3;color:#55555D}.b-pur{background:#F1EAFE;color:#7C3AED}
+.b-ok{background:var(--okb);color:var(--ok)}.b-warn{background:var(--warnb);color:var(--warn)}.b-info{background:var(--infob);color:var(--info)}.b-red{background:var(--soft);color:var(--red2)}.b-gray{background:#F1F1F3;color:#55555D}
 .filt{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .lbl{color:var(--sub);font-size:13px}
 .sel{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;min-width:170px;background:#fff}
@@ -28,7 +30,6 @@ select.sel{min-width:260px;font:14px 'Inter','Segoe UI',sans-serif;color:var(--t
 .upd{margin-left:auto;color:var(--sub);font-size:13px}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 18px;position:relative;overflow:hidden}
-.kpi::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--c)}
 .kh{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px}
 .ki{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--cb);color:var(--c)}
 .kv{font-size:34px;font-weight:700;letter-spacing:-.5px;margin-top:8px;line-height:1.1}
@@ -44,6 +45,8 @@ h3 small{font-weight:400;color:var(--sub);font-size:13px;margin-left:auto}
 .seg span{padding:7px 14px;font-weight:500;color:var(--sub);border-right:1px solid var(--line);cursor:pointer;white-space:nowrap}
 .seg span:last-child{border:0}
 .seg span.on{background:var(--red);color:#fff}
+.seg span:not(.on):hover{background:#FCFAFA;color:var(--text)}
+.seg span:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--text)}
 .seg span i{font-style:normal;font-size:12px;opacity:.8;margin-left:4px}
 .srch{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 12px;min-width:280px;margin-left:auto}
 .srch input{border:0;outline:0;font:14px 'Inter','Segoe UI',sans-serif;flex:1;min-width:0;background:transparent}
@@ -56,8 +59,10 @@ tr:last-child td{border:0}
 td.m{font:500 13px var(--mono);color:var(--red2)}
 td.mut2{color:var(--sub)}
 .ck{width:16px;height:16px;border:1.5px solid #C9C2C4;border-radius:4px;display:inline-grid;place-items:center;vertical-align:middle;cursor:pointer;background:#fff}
+.ck:hover{border-color:var(--red)}
 .ck.on{background:var(--red);border-color:var(--red);color:#fff;font-size:11px;font-weight:700;line-height:1}
 .ck.dis{background:#F1EEEF;border-color:#E2DCDD;cursor:default}
+.ck.dis:hover{border-color:#E2DCDD}
 .soc{display:inline-block;width:46px;height:6px;border-radius:3px;background:#EEE;vertical-align:middle;margin-left:8px;overflow:hidden}.soc i{display:block;height:100%}
 .mut td{color:#9A9AA2}.mut td.m{color:#B79AA0}
 .why{display:inline-block;max-width:360px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;font-size:12.5px}
@@ -146,14 +151,14 @@ function shell(){
   '<div class="filt"><span class="lbl">Ngày</span><div class="sel" style="min-width:170px">'+ic('cal')+esc(D.date)+'</div>'+
   '<span class="lbl" style="margin-left:8px">Đơn vị</span><select class="sel" id="unit">'+unitOptions()+'</select>'+
   '<span class="upd">Cập nhật lúc '+esc(D.updated)+'</span>'+
-  '<span class="btn" id="exp">'+ic('dl')+'Xuất danh sách</span>'+
-  '<span class="btn p off" id="appr">'+ic('ok')+'<span id="apprT"></span></span></div>'+
+  '<span class="btn" id="exp" role="button" tabindex="0">'+ic('dl')+'Xuất danh sách</span>'+
+  '<span class="btn p off" id="appr" role="button" tabindex="0" aria-disabled="true">'+ic('ok')+'<span id="apprT"></span></span></div>'+
   '<div class="kpis" id="kpis"></div>'+
   '<div class="card tl"><h3>Biểu đồ 24 giờ hôm nay<small id="tlsub"></small></h3>'+
   '<svg id="tl" width="100%" viewBox="0 0 1500 205" style="display:block;margin-top:6px"></svg></div>'+
   '<div class="card" style="padding-bottom:6px"><h3 id="tt">Danh sách thiết bị<small id="ttc"></small></h3>'+
-  '<div class="tools"><div class="seg" id="seg"></div><div class="srch">'+ic('search')+'<input id="q" placeholder="Tìm mã thiết bị, mã trạm, model..."></div></div>'+
-  '<div class="tw"><table><thead><tr><th><span class="ck" id="ckall"></span></th><th>Mã thiết bị</th><th>Model</th><th>Mã trạm</th><th>Tỉnh</th><th>Ưu tiên</th>'+(D.weather?'<th>Thời tiết</th>':'')+'<th>Thời gian xả ắc quy</th><th>Khoảng thời gian xả</th><th>Khả dụng</th><th>Trạng thái</th></tr></thead><tbody id="tb"></tbody></table></div>'+
+  '<div class="tools"><div class="seg" id="seg" role="tablist"></div><div class="srch">'+ic('search')+'<input id="q" placeholder="Tìm mã thiết bị, mã trạm, model..."></div></div>'+
+  '<div class="tw"><table><thead><tr><th><span class="ck" id="ckall" role="checkbox" tabindex="0" aria-checked="false"></span></th><th>Mã thiết bị</th><th>Model</th><th>Mã trạm</th><th>Tỉnh</th><th>Ưu tiên</th>'+(D.weather?'<th>Thời tiết</th>':'')+'<th>Thời gian xả ắc quy</th><th>Khoảng thời gian xả</th><th>Khả dụng</th><th>Trạng thái</th></tr></thead><tbody id="tb"></tbody></table></div>'+
   '<div class="pager" id="pg"></div></div>';
   $('unit').onchange=function(){unit=this.value;page=0;selected={};draw()};
   $('q').oninput=function(){q=this.value;page=0;drawTable()};
@@ -254,7 +259,7 @@ function drawTable(){
   var rows=f.slice(page*PS,page*PS+PS), h='';
   rows.forEach(function(r){
     var s=status(r), st=ST[s], ex=s==='excl', canSel=s==='prop';
-    var ck = ex?'<span class="ck dis"></span>': canSel ? '<span class="ck'+(selected[r.i]?' on':'')+'" data-i="'+r.i+'">'+(selected[r.i]?'✓':'')+'</span>' : '<span class="ck dis"></span>';
+    var ck = canSel ? '<span class="ck'+(selected[r.i]?' on':'')+'" data-i="'+r.i+'" role="checkbox" tabindex="0" aria-checked="'+(selected[r.i]?'true':'false')+'">'+(selected[r.i]?'✓':'')+'</span>' : '<span class="ck dis" aria-disabled="true"></span>';
     var hv = r.h==null?'—':vn(r.h,1)+' h'+'<span class="soc"><i style="width:'+Math.min(100,Math.round((r.h||0)/8*100))+'%;background:'+((r.h||0)>=4?'#16A34A':'#D97706')+'"></i></span>';
     var mid = ex ? '<span class="why" title="'+esc(r.why)+'">'+esc(r.why)+'</span>' : (r.st? esc(r.st)+' → '+esc(r.en) : '—');
     var idc = r.id==='—' ? '—' : esc(r.id)+(r.src&&r.src.indexOf('Serial')===0?' <span class="badge b-gray" title="Thiếu mã thiết bị cơ điện, dùng số Serial" style="font:600 11px Inter,sans-serif;padding:1px 6px">Serial</span>':'');
@@ -266,21 +271,23 @@ function drawTable(){
   var nsel=Object.keys(selected).length;
   $('tt').firstChild.nodeValue = D.level==='station'?'Danh sách trạm':'Danh sách thiết bị';
   $('apprT').textContent='Duyệt & tác động ('+nsel+' '+(D.level==='station'?'trạm':'thiết bị')+')';
-  $('appr').className='btn p'+(nsel?'':' off');
+  $('appr').className='btn p'+(nsel?'':' off'); $('appr').setAttribute('aria-disabled',nsel?'false':'true');
   var props=f.filter(function(r){return status(r)==='prop'});
   var allSel=props.length>0&&props.every(function(r){return selected[r.i]});
   $('ckall').className='ck'+(allSel?' on':''); $('ckall').textContent=allSel?'✓':'';
+  $('ckall').setAttribute('aria-checked',allSel?'true':'false');
   Array.prototype.forEach.call(document.querySelectorAll('#tb .ck[data-i]'),function(el){
     el.onclick=function(){var i=el.getAttribute('data-i'); if(selected[i]) delete selected[i]; else selected[i]=1; drawTable()};
   });
-  $('pg').innerHTML='<span>Trang '+(page+1)+' / '+pages+'</span><span class="btn" id="pp">‹ Trước</span><span class="btn" id="pn">Sau ›</span>';
+  $('pg').innerHTML='<span>Trang '+(page+1)+' / '+pages+'</span><span class="btn" id="pp" role="button" tabindex="0">‹ Trước</span><span class="btn" id="pn" role="button" tabindex="0">Sau ›</span>';
   $('pp').style.opacity=page?1:.4; $('pn').style.opacity=page<pages-1?1:.4;
+  $('pp').setAttribute('aria-disabled',page?'false':'true'); $('pn').setAttribute('aria-disabled',page<pages-1?'false':'true');
   $('pp').onclick=function(){if(page>0){page--;drawTable()}};
   $('pn').onclick=function(){if(page<pages-1){page++;drawTable()}};
   var b=base(), cnt={all:b.length,prop:0,appr:0,excl:0};
   b.forEach(function(r){var s=status(r); if(s==='prop')cnt.prop++; else if(s==='excl')cnt.excl++; else cnt.appr++});
   var segs=[['all','Tất cả'],['prop','Đề xuất'],['appr','Đã duyệt'],['excl','Loại trừ']];
-  $('seg').innerHTML=segs.map(function(x){return '<span data-f="'+x[0]+'" class="'+(filt===x[0]?'on':'')+'">'+x[1]+'<i>'+vn(cnt[x[0]])+'</i></span>'}).join('');
+  $('seg').innerHTML=segs.map(function(x){return '<span data-f="'+x[0]+'" class="'+(filt===x[0]?'on':'')+'" role="tab" tabindex="0" aria-selected="'+(filt===x[0]?'true':'false')+'">'+x[1]+'<i>'+vn(cnt[x[0]])+'</i></span>'}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('#seg span'),function(el){el.onclick=function(){filt=el.getAttribute('data-f');page=0;drawTable()}});
 }
 
@@ -303,6 +310,12 @@ function exportCsv(){
 }
 
 function draw(){kpis();chart();drawTable()}
+$('root').addEventListener('keydown',function(ev){
+  var t=ev.target;
+  if((ev.key==='Enter'||ev.key===' ') && t && t.hasAttribute && t.hasAttribute('tabindex') && t.getAttribute('aria-disabled')!=='true'){
+    ev.preventDefault(); t.click();
+  }
+});
 shell(); draw();
 setInterval(function(){kpis();chart();drawTable()},60000);
 })();

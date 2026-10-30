@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "dashboard.html"
+        ],
+        "createdAt": "2026-10-30T04:23:19.228Z",
+        "reason": "Agent: .btn.p shadow (0 4px 12px #E3102F40) has real offset+blur, not a zero-offset halo, and the page background is white (#fff) not dark - doesn't match the rule's actual target pattern"
+      }
+    ]
+  }
+}
