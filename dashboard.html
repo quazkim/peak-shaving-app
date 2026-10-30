@@ -264,7 +264,6 @@ function drawTable(){
   if(!rows.length) h='<tr><td colspan="11" class="empty">'+(D.empty?'Chưa có dữ liệu.':'Không có dòng nào khớp bộ lọc.')+'</td></tr>';
   $('tb').innerHTML=h;
   var nsel=Object.keys(selected).length;
-  $('ttc').textContent='Hiển thị '+vn(rows.length)+' / '+vn(f.length)+' dòng · đã chọn '+vn(nsel);
   $('tt').firstChild.nodeValue = D.level==='station'?'Danh sách trạm':'Danh sách thiết bị';
   $('apprT').textContent='Duyệt & tác động ('+nsel+' '+(D.level==='station'?'trạm':'thiết bị')+')';
   $('appr').className='btn p'+(nsel?'':' off');

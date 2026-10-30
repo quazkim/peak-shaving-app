@@ -95,7 +95,6 @@ with st.sidebar:
     inv_from = st.text_input("Chỉ dùng hóa đơn từ tháng (YYYY-MM, để trống = toàn bộ file)", "",
                              help="Hóa đơn nhiều tháng/năm sẽ làm danh sách trạm 3 giá lệch so với hiện tại. "
                                   "Nên dùng 2-3 tháng gần nhất.")
-    max_valid = st.number_input("Thời gian xả lớn hơn mức này coi là dữ liệu sai (giờ)", 1.0, 100000.0, 24.0, 1.0)
     st.subheader("Thiết bị")
     codes_txt = st.text_area("Mã KTTS đủ năng lực Peak Shaving (mỗi dòng một mã)", "320000841\n320002085")
     mode = st.radio("Điều kiện thiết bị của trạm",
@@ -118,7 +117,7 @@ with st.sidebar:
 params = e.Params(
     tou_method="bands" if tou_m.startswith("Theo dải") else "price_count", min_prices=int(min_prices),
     price_bands=[(r.Khung, float(r.Từ), float(r.Đến)) for r in bands_df.itertuples() if pd.notna(r.Từ)],
-    classes=tuple(classes), priorities=tuple(prios), min_discharge_h=min_h, max_valid_discharge_h=max_valid,
+    classes=tuple(classes), priorities=tuple(prios), min_discharge_h=min_h,
     reserve_h=reserve, window_start=win_start, end_time=end_time, invoice_from=inv_from.strip(),
     rain_mm=rain_mm, temp_c=temp_c, weather_scope="day" if wx_scope == "Cả ngày" else "window",
     capable_codes=tuple(c.strip() for c in codes_txt.splitlines() if c.strip()),
