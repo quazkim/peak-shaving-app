@@ -1,4 +1,6 @@
 """Kiểm thử luật cố định bằng dữ liệu nhỏ tự tạo. Chạy: python -m pytest test_engine.py"""
+import io
+
 import pandas as pd
 
 import engine as e
@@ -203,6 +205,21 @@ def test_step_weather_and_pipeline():
     d = pd.DataFrame({"bts": ["A", "B"], "Tên tỉnh/thành phố": "T", "Tên phường/xã": ["a", "b"]})
     ward = pd.DataFrame({"tinh": ["T"], "phuong": ["a"], "rain_max": [1.0], "temp_max": [30.0], "wx_code": [1], "wx_text": ["Ít mây"]})
     assert w.attach(d, ward).set_index("bts").loc["A", "wx_text"] == "Ít mây" and pd.isna(w.attach(d, ward).set_index("bts").loc["B", "rain_max"])
+
+
+def test_export_excel_writes_all_sheets():
+    """Lỗi thực tế gặp khi deploy: pandas mới (3.x/4.x) không còn nhận sheet_name theo vị trí trong
+    to_excel(), to_excel(xw, "TenSheet") raise TypeError. export_excel từng gọi theo kiểu này."""
+    d = inv([("A", 1404, 100), ("A", 2146, 300), ("A", 3931, 80)])
+    csdl = pd.DataFrame({"bts": ["A"], "Phân lớp trạm": "Lớp truy nhập", "Trạm ưu tiên": "UT3",
+                        "Thời gian xả Accu (h)": 4.0})
+    dev = pd.DataFrame({"id": ["D1"], "m": "M", "k": "320000841", "tram": "A"})
+    cm = {"device": "id", "model": "m", "code": "k", "station": "tram"}
+    res = e.run_pipeline(d, csdl, dev, cm, e.Params())
+    buf = io.BytesIO()
+    e.export_excel(res, e.Params(), buf, sample_devices=True)
+    sheets = pd.ExcelFile(buf).sheet_names
+    assert set(sheets) == {"Thiet_bi_tac_dong", "Tram_dat_dieu_kien", "Tram_bi_loai", "Phễu lọc", "Tham_so"}
 
 
 def test_price_count_rule():

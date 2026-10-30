@@ -431,15 +431,15 @@ def export_excel(result: dict, params: Params, path_or_buf, sample_devices: bool
                     "CD": "Sản lượng cao điểm tháng (kWh)", "wx_text": "Thời tiết dự báo",
                     "rain_max": "Mưa tối đa (mm/giờ)", "temp_max": "Nhiệt độ tối đa (°C)"}
             out = devices[[c for c in cols if c in devices.columns]].rename(columns=cols)
-            out.to_excel(xw, "Thiet_bi_tac_dong", index=False)
+            out.to_excel(xw, sheet_name="Thiet_bi_tac_dong", index=False)
         stations.rename(columns={"bts": "Mã trạm", "BT": "kWh bình thường", "CD": "kWh cao điểm",
                                  "TD": "kWh thấp điểm", "K": "kWh khác", "tong_kwh": "Tổng kWh",
                                  "ty_le_cd": "Tỷ lệ cao điểm (%)", "ty_le_td": "Tỷ lệ thấp điểm (%)"}
-                       ).drop(columns=["has_3g"], errors="ignore").to_excel(xw, "Tram_dat_dieu_kien", index=False)
+                       ).drop(columns=["has_3g"], errors="ignore").to_excel(xw, sheet_name="Tram_dat_dieu_kien", index=False)
         result["rejected"][["bts", "ma_ly_do", "ly_do"]].rename(
             columns={"bts": "Mã trạm", "ma_ly_do": "Mã lý do", "ly_do": "Lý do loại"}
-        ).to_excel(xw, "Tram_bi_loai", index=False)
-        pd.DataFrame(result["funnel"], columns=["Bước", "Số lượng"]).to_excel(xw, "Phễu lọc", index=False)
+        ).to_excel(xw, sheet_name="Tram_bi_loai", index=False)
+        pd.DataFrame(result["funnel"], columns=["Bước", "Số lượng"]).to_excel(xw, sheet_name="Phễu lọc", index=False)
         info = {
             "Ngưỡng thời gian xả ắc quy (h, lớn hơn)": p_val(params.min_discharge_h),
             "Dự phòng giữ lại sau xả (h)": p_val(params.reserve_h),
@@ -459,7 +459,7 @@ def export_excel(result: dict, params: Params, path_or_buf, sample_devices: bool
             if result["funnel"] and any(n == "Qua lọc thời tiết" for n, _ in result["funnel"])
             else "Chưa áp dụng",
         }
-        pd.DataFrame(list(info.items()), columns=["Tham số", "Giá trị"]).to_excel(xw, "Tham_so", index=False)
+        pd.DataFrame(list(info.items()), columns=["Tham số", "Giá trị"]).to_excel(xw, sheet_name="Tham_so", index=False)
         for ws in xw.sheets.values():
             ws.freeze_panes(1, 0)
             ws.set_column(0, 12, 22)
