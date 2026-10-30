@@ -153,7 +153,7 @@ function shell(){
   '<svg id="tl" width="100%" viewBox="0 0 1500 205" style="display:block;margin-top:6px"></svg></div>'+
   '<div class="card" style="padding-bottom:6px"><h3 id="tt">Danh sách thiết bị<small id="ttc"></small></h3>'+
   '<div class="tools"><div class="seg" id="seg"></div><div class="srch">'+ic('search')+'<input id="q" placeholder="Tìm mã thiết bị, mã trạm, model..."></div></div>'+
-  '<div class="tw"><table><thead><tr><th><span class="ck" id="ckall"></span></th><th>Mã thiết bị</th><th>Model</th><th>Mã trạm</th><th>Tỉnh</th><th>Ưu tiên</th>'+(D.weather?'<th>Thời tiết</th>':'')+'<th>Thời gian xả ắc quy</th><th>Chuyển acquy → về lưới</th><th>Khả dụng</th><th>Trạng thái</th></tr></thead><tbody id="tb"></tbody></table></div>'+
+  '<div class="tw"><table><thead><tr><th><span class="ck" id="ckall"></span></th><th>Mã thiết bị</th><th>Model</th><th>Mã trạm</th><th>Tỉnh</th><th>Ưu tiên</th>'+(D.weather?'<th>Thời tiết</th>':'')+'<th>Thời gian xả ắc quy</th><th>Khoảng thời gian xả</th><th>Khả dụng</th><th>Trạng thái</th></tr></thead><tbody id="tb"></tbody></table></div>'+
   '<div class="pager" id="pg"></div></div>';
   $('unit').onchange=function(){unit=this.value;page=0;selected={};draw()};
   $('q').oninput=function(){q=this.value;page=0;drawTable()};

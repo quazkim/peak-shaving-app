@@ -23,13 +23,13 @@ st.markdown("""
 :root{--red:#E3102F;--red2:#C8102E;--line:#ECE7E8;--sub:#6B6B73}
 header[data-testid="stHeader"],footer,#MainMenu{display:none!important}
 .block-container{padding:1.2rem 1.6rem 2rem!important;max-width:100%!important}
+section[data-testid="stSidebar"]{background:#FAF8F8;border-right:1px solid var(--line)}
 .apphead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .apphead .ico{width:36px;height:36px;border-radius:9px;background:#FEF3E2;color:#D97706;display:grid;place-items:center;font-size:20px}
 .apphead h1{font-size:22px;font-weight:700;margin:0;padding:0;line-height:1.2;color:#1F1F23}
 .apphead .sub{color:var(--sub);font-size:13px}
 .apphead .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;font-size:12.5px;font-weight:600;background:#E8F7EE;color:#16A34A}
 .apphead .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.stTabs [data-baseweb="tab-list"]{gap:4px}
 div[data-testid="stExpander"]{border:1px solid var(--line);border-radius:12px;background:#fff}
 div[data-testid="stExpander"] summary{font-weight:600}
 .stButton>button[kind="primary"],.stDownloadButton>button{border-radius:9px;font-weight:500}
@@ -72,61 +72,84 @@ def guess(cols: list[str], keys: list[str]) -> int:
     return 0
 
 
-# ------------------------------------------------------------------ hai tab: Dashboard và Cài đặt
-tab_dash, tab_settings = st.tabs([":material/dashboard: Dashboard", ":material/settings: Cài đặt"])
+# ------------------------------------------------------------------ tham số (trang Cài đặt): nhãn lựa chọn
+TOU_OPTS = ["Theo số đơn giá khác nhau trong tháng", "Theo dải đơn giá cao/bình thường/thấp điểm"]
+MODE_OPTS = ["Có ít nhất một thiết bị đủ năng lực", "Mọi thiết bị của trạm đều đủ năng lực"]
+WX_SCOPE_OPTS = ["Trong khung xả", "Cả ngày"]
 
-# ------------------------------------------------------------------ tham số (tab Cài đặt)
-with tab_settings:
+
+def get_params() -> e.Params:
+    """Đọc tham số từ session_state (giữ nguyên dù đang ở trang Dashboard hay chưa từng mở trang Cài đặt)."""
+    ss = st.session_state
+    tou_m = ss.get("k_tou_m", TOU_OPTS[0])
+    mode = ss.get("k_mode", MODE_OPTS[0])
+    wx_scope = ss.get("k_wx_scope", WX_SCOPE_OPTS[0])
+    bands_df = ss.get("k_bands_df", pd.DataFrame(e.DEFAULT_PRICE_BANDS, columns=["Khung", "Từ", "Đến"]))
+    codes_txt = ss.get("k_codes_txt", "320000841\n320002085")
+    return e.Params(
+        tou_method="bands" if tou_m.startswith("Theo dải") else "price_count",
+        min_prices=int(ss.get("k_min_prices", 2)),
+        price_bands=[(r.Khung, float(r.Từ), float(r.Đến)) for r in bands_df.itertuples() if pd.notna(r.Từ)],
+        classes=tuple(ss.get("k_classes", ["Lớp truy nhập"])),
+        priorities=tuple(ss.get("k_prios", ["UT2", "UT3"])),
+        min_discharge_h=ss.get("k_min_h", 3.0),
+        reserve_h=ss.get("k_reserve", 1.0),
+        window_start=ss.get("k_win_start", "17:30"),
+        end_time=ss.get("k_end_time", "22:30"),
+        invoice_from=ss.get("k_inv_from", "").strip(),
+        rain_mm=ss.get("k_rain_mm", 8.0),
+        temp_c=ss.get("k_temp_c", 33.0),
+        weather_scope="day" if wx_scope == "Cả ngày" else "window",
+        capable_codes=tuple(c.strip() for c in codes_txt.splitlines() if c.strip()),
+        station_mode="all" if mode.startswith("Mọi") else "any")
+
+
+# ------------------------------------------------------------------ trang Cài đặt
+def page_settings():
     st.subheader("Trạm 3 giá")
-    tou_m = st.radio("Cách nhận diện trạm 3 giá",
-                     ["Theo số đơn giá khác nhau trong tháng", "Theo dải đơn giá cao/bình thường/thấp điểm"],
+    tou_m = st.radio("Cách nhận diện trạm 3 giá", TOU_OPTS, key="k_tou_m",
                      help="Trạm 1 giá: mọi khung giờ cùng một đơn giá. Trạm 3 giá: trong cùng một tháng có nhiều đơn giá. "
-                          "Cách thứ hai là cách của skill BO (cần bảng dải đơn giá ở cuối tab này).")
-    min_prices = st.number_input("Số đơn giá khác nhau tối thiểu trong một tháng", 2, 6, 2, 1,
-                                 disabled=tou_m.startswith("Theo dải"),
-                                 help="Hai đơn giá lệch nhau dưới 1% coi là một.")
+                          "Cách thứ hai là cách của skill BO (cần bảng dải đơn giá ở cuối trang này).")
+    st.number_input("Số đơn giá khác nhau tối thiểu trong một tháng", 2, 6, 2, 1,
+                     disabled=tou_m.startswith("Theo dải"), key="k_min_prices",
+                     help="Hai đơn giá lệch nhau dưới 1% coi là một.")
     st.subheader("Hạ tầng")
-    min_h = st.number_input("Thời gian xả ắc quy phải lớn hơn (giờ)", 0.0, 24.0, 3.0, 0.5)
-    reserve = st.number_input("Dự phòng giữ lại sau khi xả (giờ)", 0.0, 12.0, 1.0, 0.5)
-    end_time = st.text_input("Giờ kết thúc xả (HH:MM)", "22:30")
-    win_start = st.text_input("Đầu cửa sổ xả cho phép (HH:MM)", "17:30")
-    prios = st.multiselect("Trạm ưu tiên cho phép", ["UT1", "UT2", "UT3"], ["UT2", "UT3"])
-    classes = st.multiselect("Phân lớp trạm cho phép",
-                             ["Lớp truy nhập", "Tổng trạm huyện", "Tổng trạm tỉnh", "Trạm trục"],
-                             ["Lớp truy nhập"])
-    inv_from = st.text_input("Chỉ dùng hóa đơn từ tháng (YYYY-MM, để trống = toàn bộ file)", "",
-                             help="Hóa đơn nhiều tháng/năm sẽ làm danh sách trạm 3 giá lệch so với hiện tại. "
-                                  "Nên dùng 2-3 tháng gần nhất.")
+    st.number_input("Thời gian xả ắc quy phải lớn hơn (giờ)", 0.0, 24.0, 3.0, 0.5, key="k_min_h")
+    st.number_input("Dự phòng giữ lại sau khi xả (giờ)", 0.0, 12.0, 1.0, 0.5, key="k_reserve")
+    st.text_input("Giờ kết thúc xả (HH:MM)", "22:30", key="k_end_time")
+    st.text_input("Đầu cửa sổ xả cho phép (HH:MM)", "17:30", key="k_win_start")
+    st.multiselect("Trạm ưu tiên cho phép", ["UT1", "UT2", "UT3"], ["UT2", "UT3"], key="k_prios")
+    st.multiselect("Phân lớp trạm cho phép",
+                   ["Lớp truy nhập", "Tổng trạm huyện", "Tổng trạm tỉnh", "Trạm trục"],
+                   ["Lớp truy nhập"], key="k_classes")
+    st.text_input("Chỉ dùng hóa đơn từ tháng (YYYY-MM, để trống = toàn bộ file)", "", key="k_inv_from",
+                 help="Hóa đơn nhiều tháng/năm sẽ làm danh sách trạm 3 giá lệch so với hiện tại. "
+                      "Nên dùng 2-3 tháng gần nhất.")
     st.subheader("Thiết bị")
-    codes_txt = st.text_area("Mã KTTS đủ năng lực Peak Shaving (mỗi dòng một mã)", "320000841\n320002085")
-    mode = st.radio("Điều kiện thiết bị của trạm",
-                    ["Có ít nhất một thiết bị đủ năng lực", "Mọi thiết bị của trạm đều đủ năng lực"],
-                    help="Mặc định: trạm có ít nhất một thiết bị đủ năng lực thì giữ, và chỉ tác động các thiết bị "
-                         "đủ năng lực của trạm đó. Chọn cách còn lại nếu cần loại trạm có thiết bị không đủ năng lực.")
+    st.text_area("Mã KTTS đủ năng lực Peak Shaving (mỗi dòng một mã)", "320000841\n320002085", key="k_codes_txt")
+    st.radio("Điều kiện thiết bị của trạm", MODE_OPTS, key="k_mode",
+            help="Mặc định: trạm có ít nhất một thiết bị đủ năng lực thì giữ, và chỉ tác động các thiết bị "
+                 "đủ năng lực của trạm đó. Chọn cách còn lại nếu cần loại trạm có thiết bị không đủ năng lực.")
     st.subheader("Thời tiết")
-    use_wx = st.checkbox("Áp dụng thời tiết (Open-Meteo, cần mạng)", False,
-                         help="Loại trạm có nguy cơ mất điện theo dự báo hôm nay. Tọa độ lấy theo phường/xã trong CSDL "
-                              "nhà trạm (cột 'Tên phường/xã'). Lỗi mạng thì app bỏ qua bước này và báo rõ.")
-    rain_mm = st.number_input("Loại trạm nếu mưa lớn hơn (mm/giờ)", 0.0, 200.0, 8.0, 1.0)
-    temp_c = st.number_input("Loại trạm nếu nhiệt độ lớn hơn (°C)", 0.0, 60.0, 33.0, 1.0)
-    wx_scope = st.radio("Khoảng thời gian xét dự báo", ["Trong khung xả", "Cả ngày"],
-                        help="Trong khung xả: các giờ từ đầu cửa sổ đến giờ kết thúc xả. Cả ngày: 0h-24h hôm nay.")
+    st.checkbox("Áp dụng thời tiết (Open-Meteo, cần mạng)", False, key="k_use_wx",
+               help="Loại trạm có nguy cơ mất điện theo dự báo hôm nay. Tọa độ lấy theo phường/xã trong CSDL "
+                    "nhà trạm (cột 'Tên phường/xã'). Lỗi mạng thì app bỏ qua bước này và báo rõ.")
+    st.number_input("Loại trạm nếu mưa lớn hơn (mm/giờ)", 0.0, 200.0, 8.0, 1.0, key="k_rain_mm")
+    st.number_input("Loại trạm nếu nhiệt độ lớn hơn (°C)", 0.0, 60.0, 33.0, 1.0, key="k_temp_c")
+    st.radio("Khoảng thời gian xét dự báo", WX_SCOPE_OPTS, key="k_wx_scope",
+            help="Trong khung xả: các giờ từ đầu cửa sổ đến giờ kết thúc xả. Cả ngày: 0h-24h hôm nay.")
     with st.expander("Dải đơn giá nhận diện khung giờ (đồng/kWh)"):
         bands_df = st.data_editor(
             pd.DataFrame(e.DEFAULT_PRICE_BANDS, columns=["Khung", "Từ", "Đến"]),
-            num_rows="dynamic", use_container_width=True, hide_index=True)
+            num_rows="dynamic", use_container_width=True, hide_index=True, key="k_bands_df_widget")
+        st.session_state["k_bands_df"] = bands_df
 
-params = e.Params(
-    tou_method="bands" if tou_m.startswith("Theo dải") else "price_count", min_prices=int(min_prices),
-    price_bands=[(r.Khung, float(r.Từ), float(r.Đến)) for r in bands_df.itertuples() if pd.notna(r.Từ)],
-    classes=tuple(classes), priorities=tuple(prios), min_discharge_h=min_h,
-    reserve_h=reserve, window_start=win_start, end_time=end_time, invoice_from=inv_from.strip(),
-    rain_mm=rain_mm, temp_c=temp_c, weather_scope="day" if wx_scope == "Cả ngày" else "window",
-    capable_codes=tuple(c.strip() for c in codes_txt.splitlines() if c.strip()),
-    station_mode="all" if mode.startswith("Mọi") else "any")
 
-# ------------------------------------------------------------------ nạp file + kết quả (tab Dashboard)
-with tab_dash:
+# ------------------------------------------------------------------ trang Dashboard: nạp file + kết quả
+def page_dashboard():
+    params = get_params()
+    use_wx = st.session_state.get("k_use_wx", False)
+
     colmap, dev = None, None
     with st.expander("Nguồn dữ liệu và chạy lọc", expanded="res" not in st.session_state):
         c1, c2, c3 = st.columns(3)
@@ -226,10 +249,10 @@ with tab_dash:
         res, used, sample, prices, _ = st.session_state["res"]
         if res.get("k_share", 0) > 0.5:
             st.error(f"{res['k_share']:.0%} dòng hóa đơn có đơn giá không khớp dải nào (cao/bình thường/thấp điểm). "
-                     "Kết quả 3 giá sẽ thiếu trạm: kiểm tra kỳ hóa đơn và bảng 'Dải đơn giá' ở tab Cài đặt.")
+                     "Kết quả 3 giá sẽ thiếu trạm: kiểm tra kỳ hóa đơn và bảng 'Dải đơn giá' ở trang Cài đặt.")
         if res.get("period") and not used.invoice_from:
             st.warning(f"Đang dùng toàn bộ hóa đơn kỳ {res['period'][0]} - {res['period'][1]}. "
-                       "Danh sách 3 giá nên lấy từ 2-3 tháng gần nhất: đặt 'Chỉ dùng hóa đơn từ tháng' ở tab Cài đặt.")
+                       "Danh sách 3 giá nên lấy từ 2-3 tháng gần nhất: đặt 'Chỉ dùng hóa đơn từ tháng' ở trang Cài đặt.")
         for m in st.session_state.get("wx_msg", []):
             st.warning(m)
         if res["devices"] is not None:
@@ -271,3 +294,11 @@ with tab_dash:
             e.export_excel(res, used, buf, sample_devices=sample)
             st.download_button("Tải kết quả Excel", buf.getvalue(), "ket_qua_peak_shaving.xlsx",
                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+# ------------------------------------------------------------------ điều hướng: 2 icon ở thanh bên trái
+pg = st.navigation([
+    st.Page(page_dashboard, title="Dashboard", icon=":material/dashboard:", default=True),
+    st.Page(page_settings, title="Cài đặt", icon=":material/settings:"),
+])
+pg.run()
