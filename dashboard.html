@@ -240,7 +240,6 @@ function chart(){
     g+=l[1]==='box'?'<rect x="'+lx+'" y="'+(ly2-10)+'" width="12" height="12" rx="2" fill="'+l[0]+'" fill-opacity=".6"/>':'<line x1="'+lx+'" x2="'+(lx+14)+'" y1="'+(ly2-4)+'" y2="'+(ly2-4)+'" stroke="'+l[0]+'" stroke-width="2" stroke-dasharray="4 3"/>';
     g+='<text x="'+(lx+20)+'" y="'+ly2+'" font-size="12.5" fill="#55555D">'+l[2]+'</text>';lx+=400;});
   s.innerHTML=g;
-  $('tlsub').textContent='Cửa sổ xả '+D.win_start+'–'+D.win_end+' theo tham số; khung 00:00–06:00 là thấp điểm theo thiết kế, cần đối chiếu biểu giá hợp đồng';
 }
 
 function wxCell(r){
